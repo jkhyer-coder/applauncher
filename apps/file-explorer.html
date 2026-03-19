@@ -2,12 +2,77 @@
 <html>
 <body>
 <h2>File Explorer</h2>
+
 <input type="file" id="fileInput">
+<div id="dropZone" style="border:2px dashed white; padding:20px; margin-top:10px;">
+Drop files here
+</div>
+
+<ul id="files"></ul>
+
 <script>
-document.getElementById('fileInput').onchange = e => {
-  const file = e.target.files[0];
-  alert("Imported: " + file.name);
+let files = JSON.parse(localStorage.getItem("files")) || [];
+
+function save() {
+  localStorage.setItem("files", JSON.stringify(files));
+  render();
+}
+
+function render() {
+  const list = document.getElementById("files");
+  list.innerHTML = "";
+
+  files.forEach(file => {
+    const li = document.createElement("li");
+    li.textContent = file.name;
+
+    li.onclick = () => openFile(file);
+
+    list.appendChild(li);
+  });
+}
+
+function handle(file) {
+  const reader = new FileReader();
+
+  reader.onload = e => {
+    files.push({
+      name: file.name,
+      type: file.type,
+      content: e.target.result
+    });
+    save();
+  };
+
+  reader.readAsDataURL(file);
+}
+
+document.getElementById("fileInput").onchange = e => {
+  handle(e.target.files[0]);
 };
+
+const drop = document.getElementById("dropZone");
+
+drop.ondragover = e => e.preventDefault();
+drop.ondrop = e => {
+  e.preventDefault();
+  handle(e.dataTransfer.files[0]);
+};
+
+function openFile(file) {
+  if (file.type.includes("text")) {
+    alert(atob(file.content.split(",")[1]));
+  } else if (file.type.includes("image")) {
+    window.open(file.content);
+  } else if (file.type.includes("html")) {
+    const w = window.open();
+    w.document.write(atob(file.content.split(",")[1]));
+  } else {
+    alert("filetype not supported");
+  }
+}
+
+render();
 </script>
 </body>
 </html>
