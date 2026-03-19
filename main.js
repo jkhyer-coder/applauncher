@@ -45,7 +45,56 @@ function renderDesktop() {
     desktop.appendChild(icon);
   });
 }
+function renderTaskbar() {
+  taskbarApps.innerHTML = "";
 
+  openApps.forEach(({ app, win }) => {
+    const item = document.createElement("div");
+    item.className = "taskbar-item";
+    item.textContent = app.title;
+
+    item.onclick = () => {
+      win.style.zIndex = ++zIndex;
+    };
+
+    taskbarApps.appendChild(item);
+  });
+}
+// Toggle start menu
+document.getElementById("start-btn").onclick = () => {
+  startMenu.style.display =
+    startMenu.style.display === "flex" ? "none" : "flex";
+  renderStartMenu();
+};
+
+// Render start menu
+function renderStartMenu() {
+  startMenu.innerHTML = "";
+
+  installedApps.forEach(app => {
+    const item = document.createElement("div");
+    item.className = "start-item";
+    item.textContent = app.title;
+
+    item.onclick = () => {
+      openWindow(app);
+      startMenu.style.display = "none";
+    };
+
+    startMenu.appendChild(item);
+  });
+
+  // App Store shortcut
+  const store = document.createElement("div");
+  store.className = "start-item";
+  store.textContent = "App Store";
+  store.onclick = () => {
+    openWindow({ title: "App Store", src: "apps/appstore.html" });
+    startMenu.style.display = "none";
+  };
+
+  startMenu.appendChild(store);
+}
 // Window system
 function openWindow(app) {
   const win = document.createElement("div");
@@ -62,6 +111,12 @@ function openWindow(app) {
     </div>
     <iframe src="${app.src}"></iframe>
   `;
+
+  document.body.appendChild(win);
+
+  // Track open apps
+  openApps.push({ app, win });
+  renderTaskbar();
 
   // Drag
   let offsetX, offsetY;
@@ -81,18 +136,20 @@ function openWindow(app) {
     };
   };
 
-  // Focus (z-index stacking)
+  // Focus
   win.onclick = () => win.style.zIndex = ++zIndex;
 
   // Close
-  win.querySelector(".close").onclick = () => win.remove();
+  win.querySelector(".close").onclick = () => {
+    win.remove();
+    openApps = openApps.filter(o => o.win !== win);
+    renderTaskbar();
+  };
 
   // Fullscreen
   win.querySelector(".fullscreen").onclick = () => {
     win.classList.toggle("fullscreen");
   };
-
-  document.body.appendChild(win);
 }
 
 // Install app
