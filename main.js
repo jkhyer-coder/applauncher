@@ -26,6 +26,11 @@ fetch("apps.json")
       });
     });
 
+    // Ensure App Store is available as a desktop app
+    if (!installedApps.find(a => a.title === "App Store")) {
+      installedApps.push({ title: "App Store", icon: "icons/store.png", src: "apps/appstore.html", preinstalled: true });
+    }
+
     saveApps();
     renderDesktop();
 
@@ -42,6 +47,7 @@ fetch("apps.json")
       document.body.appendChild(win);
       openApps.push({ app, win });
     });
+
     renderTaskbar();
   });
 
@@ -59,7 +65,6 @@ function renderDesktop() {
   const desktop = document.getElementById("desktop");
   desktop.innerHTML = "";
 
-  // Load saved icon positions
   const positions = JSON.parse(localStorage.getItem("iconPositions")) || {};
 
   installedApps.forEach(app => {
@@ -74,7 +79,7 @@ function renderDesktop() {
       div.style.top = positions[app.title].y + "px";
     }
 
-    // Drag logic
+    // Dragging logic
     div.onmousedown = e => {
       div.classList.add("dragging");
       const startX = e.pageX - (parseInt(div.style.left) || 0);
@@ -94,11 +99,18 @@ function renderDesktop() {
       };
     };
 
-    div.onclick = () => openWindow(app);
+    div.onclick = () => {
+      if (app.title === "App Store") {
+        openWindow(app);
+      } else {
+        openWindow(app);
+      }
+    };
+
     desktop.appendChild(div);
   });
 
-  // Render desktop folders
+  // Desktop folders
   ["Desktop", "Downloads"].forEach(folderName => {
     const folder = document.createElement("div");
     folder.className = "folder";
@@ -109,7 +121,7 @@ function renderDesktop() {
 }
 
 // ------------------------------
-// Create Window (used for new & restored windows)
+// Create Window
 // ------------------------------
 function createWindow(app) {
   const win = document.createElement("div");
@@ -194,7 +206,7 @@ function createWindow(app) {
 }
 
 // ------------------------------
-// Open Window (adds to DOM + taskbar)
+// Open Window
 // ------------------------------
 function openWindow(app) {
   const win = createWindow(app);
@@ -246,7 +258,11 @@ function renderStartMenu() {
   const store = document.createElement("div");
   store.className = "start-item";
   store.textContent = "App Store";
-  store.onclick = () => { openWindow({ title: "App Store", src: "apps/appstore.html" }); startMenu.style.display = "none"; };
+  store.onclick = () => { 
+    const appStore = installedApps.find(a => a.title === "App Store");
+    if(appStore) openWindow(appStore); 
+    startMenu.style.display = "none"; 
+  };
   startMenu.appendChild(store);
 }
 
@@ -266,26 +282,6 @@ function updateClock() {
 }
 setInterval(updateClock, 1000);
 updateClock();
-
-// ------------------------------
-// Install App
-// ------------------------------
-function installApp(app) {
-  if (confirm(`Install ${app.title}?`)) {
-    installedApps.push(app);
-    saveApps();
-    renderDesktop();
-  }
-}
-
-// ------------------------------
-// Delete App
-// ------------------------------
-function deleteApp(name) {
-  installedApps = installedApps.filter(a => a.title !== name);
-  saveApps();
-  renderDesktop();
-}
 
 // ------------------------------
 // Right-Click Menu
@@ -326,4 +322,13 @@ function saveWindowPositions() {
       return { title: o.app.title, left: rect.left, top: rect.top, width: rect.width, height: rect.height };
     }))
   );
+}
+
+// ------------------------------
+// Delete App
+// ------------------------------
+function deleteApp(name) {
+  installedApps = installedApps.filter(a => a.title !== name);
+  saveApps();
+  renderDesktop();
 }
