@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html>
+<body>
+<h2>App Store</h2>
+<div id="store"></div>
+
+<script>
+fetch("../apps.json")
+  .then(res => res.json())
+  .then(data => {
+    const store = document.getElementById("store");
+
+    data.sections.forEach(section => {
+      const h = document.createElement("h3");
+      h.textContent = section.title;
+      store.appendChild(h);
+
+      section.apps.forEach(app => {
+        if (!app.preinstalled) {
+          const btn = document.createElement("button");
+          btn.textContent = app.title;
+          btn.onclick = () => {
+            parent.installApp(app);
+          };
+          store.appendChild(btn);
+        }
+      });
+    });
+  });
+</script>
+</body>
+</html>
