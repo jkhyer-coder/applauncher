@@ -27,7 +27,99 @@ fetch("apps.json")
 function saveApps() {
   localStorage.setItem("installedApps", JSON.stringify(installedApps));
 }
+// Clock in taskbar
+const clock = document.createElement("div");
+clock.id = "taskbar-clock";
+document.getElementById("taskbar").appendChild(clock);
 
+function updateClock() {
+  const d = new Date();
+  const h = String(d.getHours()).padStart(2, "0");
+  const m = String(d.getMinutes()).padStart(2, "0");
+  const s = String(d.getSeconds()).padStart(2, "0");
+  clock.textContent = `${h}:${m}:${s}`;
+}
+setInterval(updateClock, 1000);
+updateClock();
+
+// Enhanced openWindow with minimize + snap
+function openWindow(app) {
+  const win = document.createElement("div");
+  win.className = "window";
+  win.style.zIndex = ++zIndex;
+
+  win.innerHTML = `
+    <div class="titlebar">
+      <span>${app.title}</span>
+      <div>
+        <button class="minimize">—</button>
+        <button class="fullscreen">⬜</button>
+        <button class="close">X</button>
+      </div>
+    </div>
+    <iframe src="${app.src}"></iframe>
+  `;
+
+  document.body.appendChild(win);
+  openApps.push({ app, win });
+  renderTaskbar();
+
+  const bar = win.querySelector(".titlebar");
+
+  // Drag
+  let offsetX, offsetY;
+  bar.onmousedown = e => {
+    offsetX = e.offsetX;
+    offsetY = e.offsetY;
+
+    document.onmousemove = e2 => {
+      win.style.left = e2.pageX - offsetX + "px";
+      win.style.top = e2.pageY - offsetY + "px";
+    };
+
+    document.onmouseup = () => document.onmousemove = null;
+  };
+
+  // Focus
+  win.onclick = () => win.style.zIndex = ++zIndex;
+
+  // Close
+  win.querySelector(".close").onclick = () => {
+    win.remove();
+    openApps = openApps.filter(o => o.win !== win);
+    renderTaskbar();
+  };
+
+  // Fullscreen
+  win.querySelector(".fullscreen").onclick = () => {
+    win.classList.toggle("fullscreen");
+    win.classList.remove("snapped-left", "snapped-right", "snapped-top");
+  };
+
+  // Minimize
+  win.querySelector(".minimize").onclick = () => {
+    win.classList.toggle("minimized");
+  };
+
+  // Snap windows with arrow keys
+  document.addEventListener("keydown", e => {
+    if (document.activeElement.tagName === "IFRAME") return;
+    if (win.style.zIndex != zIndex) return;
+
+    if (e.key === "ArrowLeft") {
+      win.classList.remove("fullscreen", "snapped-right", "snapped-top");
+      win.classList.add("snapped-left");
+    }
+    if (e.key === "ArrowRight") {
+      win.classList.remove("fullscreen", "snapped-left", "snapped-top");
+      win.classList.add("snapped-right");
+    }
+    if (e.key === "ArrowUp") {
+      win.classList.remove("fullscreen", "snapped-left", "snapped-right");
+      win.classList.add("snapped-top");
+    }
+  });
+}
 // Desktop
 function renderDesktop() {
   const desktop = document.getElementById("desktop");
