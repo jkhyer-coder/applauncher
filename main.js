@@ -79,7 +79,14 @@ function openWindow(app) {
 
     document.onmouseup = () => document.onmousemove = null;
   };
-
+// Save window position
+localStorage.setItem(
+  "windowPositions",
+  JSON.stringify(openApps.map(o => {
+    const rect = o.win.getBoundingClientRect();
+    return { title: o.app.title, left: rect.left, top: rect.top, width: rect.width, height: rect.height };
+  }))
+);
   // Focus
   win.onclick = () => win.style.zIndex = ++zIndex;
 
@@ -125,16 +132,56 @@ function renderDesktop() {
   const desktop = document.getElementById("desktop");
   desktop.innerHTML = "";
 
+  // Load saved positions
+  const positions = JSON.parse(localStorage.getItem("iconPositions")) || {};
+
   installedApps.forEach(app => {
-    const icon = document.createElement("div");
-    icon.className = "icon";
-    icon.dataset.name = app.title;
+    const div = document.createElement("div");
+    div.className = "icon";
+    div.dataset.name = app.title;
 
-    icon.innerHTML = `<img src="${app.icon}"><br>${app.title}`;
+    div.innerHTML = `<img src="${app.icon}"><br>${app.title}`;
 
-    icon.onclick = () => openWindow(app);
+    // Set saved position
+    if (positions[app.title]) {
+      div.style.position = "absolute";
+      div.style.left = positions[app.title].x + "px";
+      div.style.top = positions[app.title].y + "px";
+    }
 
-    desktop.appendChild(icon);
+    // Dragging
+    div.onmousedown = e => {
+      div.classList.add("dragging");
+      const startX = e.pageX - (parseInt(div.style.left) || 0);
+      const startY = e.pageY - (parseInt(div.style.top) || 0);
+
+      document.onmousemove = e2 => {
+        div.style.position = "absolute";
+        div.style.left = e2.pageX - startX + "px";
+        div.style.top = e2.pageY - startY + "px";
+      };
+
+      document.onmouseup = () => {
+        div.classList.remove("dragging");
+        document.onmousemove = null;
+
+        // Save position
+        positions[app.title] = { x: parseInt(div.style.left), y: parseInt(div.style.top) };
+        localStorage.setItem("iconPositions", JSON.stringify(positions));
+      };
+    };
+
+    div.onclick = () => openWindow(app);
+    desktop.appendChild(div);
+  });
+
+  // Render desktop folders
+  ["Desktop", "Downloads"].forEach(folderName => {
+    const folder = document.createElement("div");
+    folder.className = "folder";
+    folder.innerHTML = `<img src="icons/folder.png"><br>${folderName}`;
+    folder.onclick = () => alert(`${folderName} folder clicked`);
+    desktop.appendChild(folder);
   });
 }
 function renderTaskbar() {
