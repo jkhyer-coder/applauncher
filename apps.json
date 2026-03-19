@@ -1,13 +1,46 @@
 {
   "sections": [
     {
-      "title": "System",
+      "header": "Productivity",
+      "apps": [
+        {
+          "title": "Notes",
+          "icon": "icons/notes.png",
+          "src": "apps/notes.html",
+          "preinstalled": false
+        },
+        {
+          "title": "Calculator",
+          "icon": "icons/calculator.png",
+          "src": "apps/calculator.html",
+          "preinstalled": false
+        }
+      ]
+    },
+    {
+      "header": "Entertainment",
+      "apps": [
+        {
+          "title": "Music Player",
+          "icon": "icons/music.png",
+          "src": "apps/music.html",
+          "preinstalled": false
+        },
+        {
+          "title": "Games",
+          "icon": "icons/games.png",
+          "src": "apps/games.html",
+          "preinstalled": false
+        }
+      ]
+    },
+    {
+      "header": "Utilities",
       "apps": [
         {
           "title": "File Explorer",
-          "icon": "icons/explorer.png",
+          "icon": "icons/folder.png",
           "src": "apps/file-explorer.html",
-          "type": "html",
           "preinstalled": true
         }
       ]
