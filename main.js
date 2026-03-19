@@ -1,3 +1,6 @@
+let openApps = [];
+const taskbarApps = document.getElementById("taskbar-apps");
+const startMenu = document.getElementById("start-menu");
 let installedApps = JSON.parse(localStorage.getItem("installedApps")) || [];
 let zIndex = 1;
 
