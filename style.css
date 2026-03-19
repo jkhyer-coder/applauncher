@@ -172,3 +172,22 @@ iframe {
 #files li {
   color: white;
 }
+/* Desktop folders */
+.folder, .icon {
+  width: 80px;
+  margin: 10px;
+  text-align: center;
+  cursor: pointer;
+  user-select: none;
+}
+
+.folder img, .icon img {
+  width: 64px;
+  height: 64px;
+}
+
+/* Dragging */
+.dragging {
+  opacity: 0.5;
+  border: 1px dashed white;
+}
