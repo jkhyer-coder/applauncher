@@ -1,32 +1,77 @@
 <!DOCTYPE html>
 <html>
+<head>
+  <meta charset="UTF-8">
+  <title>App Store</title>
+  <style>
+    body {
+      background: #1a1a1a;
+      color: white;
+      font-family: sans-serif;
+      padding: 10px;
+    }
+    h2 {
+      margin-top: 20px;
+      border-bottom: 1px solid white;
+      padding-bottom: 5px;
+    }
+    .app-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 15px;
+    }
+    .app {
+      width: 80px;
+      text-align: center;
+      cursor: pointer;
+    }
+    .app img {
+      width: 64px;
+      height: 64px;
+      border-radius: 12px;
+    }
+  </style>
+</head>
 <body>
-<h2>App Store</h2>
-<div id="store"></div>
+  <h1>App Store</h1>
+  <div id="store"></div>
 
-<script>
-fetch("../apps.json")
-  .then(res => res.json())
-  .then(data => {
-    const store = document.getElementById("store");
+  <script>
+    fetch("apps.json")
+      .then(res => res.json())
+      .then(data => {
+        const store = document.getElementById("store");
 
-    data.sections.forEach(section => {
-      const h = document.createElement("h3");
-      h.textContent = section.title;
-      store.appendChild(h);
+        data.sections.forEach(section => {
+          const header = document.createElement("h2");
+          header.textContent = section.header;
+          store.appendChild(header);
 
-      section.apps.forEach(app => {
-        if (!app.preinstalled) {
-          const btn = document.createElement("button");
-          btn.textContent = app.title;
-          btn.onclick = () => {
-            parent.installApp(app);
-          };
-          store.appendChild(btn);
-        }
+          const grid = document.createElement("div");
+          grid.className = "app-grid";
+
+          section.apps.forEach(app => {
+            if (!app.preinstalled && !JSON.parse(localStorage.getItem("installedApps") || "[]").find(a => a.title === app.title)) {
+              const div = document.createElement("div");
+              div.className = "app";
+              div.innerHTML = `<img src="${app.icon}"><br>${app.title}`;
+              div.onclick = () => {
+                if (confirm(`Install ${app.title}?`)) {
+                  let installed = JSON.parse(localStorage.getItem("installedApps") || "[]");
+                  installed.push(app);
+                  localStorage.setItem("installedApps", JSON.stringify(installed));
+                  alert(`${app.title} installed!`);
+                  div.style.display = "none"; // hide from store after install
+                  window.location.reload(); // refresh desktop
+                }
+              };
+              grid.appendChild(div);
+            }
+          });
+
+          store.appendChild(grid);
+        });
       });
-    });
-  });
-</script>
+  </script>
 </body>
 </html>
